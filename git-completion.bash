@@ -87,10 +87,11 @@ __git_ps1 ()
 __git_ps1_changes ()
 {
 	local b_ref="$(git symbolic-ref HEAD 2>/dev/null)";
+    local b_origin="$(git for-each-ref --format='%(upstream:short)' $(git symbolic-ref -q HEAD))";
 	if [ -n "$b_ref" ]; then
 		local b=${b_ref##refs/heads/};
 		local changes="";
-		local unpush=$(git rev-list origin/$b..$b --count);
+		local unpush=$(git rev-list $b_origin..$b --count);
 		local staged=$(git diff --staged --name-status | wc -l);
 		local uncommits=$(git status -s -uall --porcelain);
 
