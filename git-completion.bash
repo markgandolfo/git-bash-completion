@@ -96,7 +96,7 @@ __git_ps1_changes ()
 		local uncommits=$(git status -s -uall --porcelain);
 
 		if (( $unpush > 0 )); then
-			changes="$changes ▵$unpush"
+			changes="$changes ^$unpush"
 		fi
 		if (( $staged > 0 )); then
 			changes="$changes +$staged"
