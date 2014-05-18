@@ -86,9 +86,9 @@ __git_ps1 ()
 
 __git_ps1_changes ()
 {
-	local b_ref="$(git symbolic-ref HEAD 2>/dev/null)";
-	if [ -n "$b_ref" ]; then
-		local b_origin="$(git for-each-ref --format='%(upstream:short)' $(git symbolic-ref -q HEAD))";
+	local b_ref="$(git symbolic-ref -q HEAD 2>/dev/null)";
+	local b_origin="$(git for-each-ref --format='%(upstream:short)' $b_ref)";
+	if [ -n "$b_ref" ] && [ -n "$b_origin" ]; then
 		local b=${b_ref##refs/heads/};
 		local changes="";
 		local unpush=$(git rev-list $b_origin..$b --count);
