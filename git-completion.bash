@@ -37,8 +37,8 @@
 #       to PS1 close to __git_ps1:
 #        ...$(__git_ps1 " (%s)")$(__git_ps1_changes " (%s)")...
 #
-#       Example: ▵2 -+3 *1 ?6 means:
-#        ▵2 - Your branch is ahead of 'origin/branch' by 2 commits
+#       Example: ^2 -+3 *1 ?6 means:
+#        ^2 - Your branch is ahead of 'origin/branch' by 2 commits
 #        +3 - Your branch has 3 staged changes to be commited
 #        *1 - Your branch has 1 unstaged changes to be commited
 #        ?6 - Your branch has 6 untracked files
