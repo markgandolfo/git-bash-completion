@@ -106,7 +106,7 @@ __git_ps1_changes ()
 		fi
 
 		local uncommits=$(git status -s -uall --porcelain);
-		local unstaged=$(echo "$uncommits" | grep -c "^ [A-Z]");
+		local unstaged=$(echo "$uncommits" | grep -c "^[^\b][A-Z]");
 		if (( $unstaged > 0 )); then
 			changes="$changes *$unstaged"
 		fi
