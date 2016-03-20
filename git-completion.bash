@@ -105,7 +105,7 @@ __git_ps1_changes ()
 			changes="$changes +$staged"
 		fi
 
-		local uncommits=$(git status -s -uall --porcelain);
+		local uncommits=$(git status -s -uall --porcelain 2>/dev/null);
 		local unstaged=$(echo "$uncommits" | grep -c "^[^\b][A-Z]");
 		if (( $unstaged > 0 )); then
 			changes="$changes *$unstaged"
@@ -116,7 +116,7 @@ __git_ps1_changes ()
 			changes="$changes ?$untracked"
 		fi
 
-		local stash="$(git stash list | wc -l)"
+		local stash="$(git stash list 2>/dev/null | wc -l)"
 		if [ $stash -gt 0 ]; then
 			changes="$changes |$stash|"
 		fi
