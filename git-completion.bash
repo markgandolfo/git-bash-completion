@@ -88,38 +88,39 @@ __git_ps1_changes ()
 {
 	local b_ref="$(git symbolic-ref -q HEAD 2>/dev/null)";
 	if [ -n "$b_ref" ]; then
-		local b_origin="$(git for-each-ref --format='%(upstream:short)' $b_ref)";
-		if [ -n "$b_origin" ]; then
-			local b=${b_ref##refs/heads/};
-			local changes="";
-			local unpush=$(git rev-list $b_origin..$b --count);
-			local staged=$(git diff --staged --name-status | wc -l);
-			local uncommits=$(git status -s -uall --porcelain);
+		local b=${b_ref##refs/heads/};
+		local changes="";
 
+		local b_orgn="$(git for-each-ref --format='%(upstream:short)' $b_ref)";
+		if [ -n "$b_orgn" ]; then
+			local unpush=$(git rev-list $b_orgn..$b --count);
 			if (( $unpush > 0 )); then
 				changes="$changes ^$unpush"
 			fi
-			if (( $staged > 0 )); then
-				changes="$changes +$staged"
-			fi
+		fi
 
-			local unstaged=$(echo "$uncommits" | grep -c "^ [A-Z]");
-			if (( $unstaged > 0 )); then
-				changes="$changes *$unstaged"
-			fi
+		local staged=$(git diff --staged --name-status | wc -l);
+		if (( $staged > 0 )); then
+			changes="$changes +$staged"
+		fi
 
-			local untracked=$(echo "$uncommits" | grep -c "^??");
-			if (( $untracked > 0 )); then
-				changes="$changes ?$untracked"
-			fi
+		local uncommits=$(git status -s -uall --porcelain);
+		local unstaged=$(echo "$uncommits" | grep -c "^ [A-Z]");
+		if (( $unstaged > 0 )); then
+			changes="$changes *$unstaged"
+		fi
 
-			changes="$(echo "$changes" | xargs)";
-			if [ -n "$changes" ]; then
-				if [ -n "$1" ]; then
-					printf "$1" "$changes";
-				else
-					printf " %s" "$changes";
-				fi
+		local untracked=$(echo "$uncommits" | grep -c "^??");
+		if (( $untracked > 0 )); then
+			changes="$changes ?$untracked"
+		fi
+
+		changes="$(echo "$changes" | xargs)";
+		if [ -n "$changes" ]; then
+			if [ -n "$1" ]; then
+				printf "$1" "$changes";
+			else
+				printf " %s" "$changes";
 			fi
 		fi
 	fi
