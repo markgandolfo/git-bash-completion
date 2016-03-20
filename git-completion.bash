@@ -37,11 +37,12 @@
 #       to PS1 close to __git_ps1:
 #        ...$(__git_ps1 " (%s)")$(__git_ps1_changes " (%s)")...
 #
-#       Example: ^2 -+3 *1 ?6 means:
-#        ^2 - Your branch is ahead of 'origin/branch' by 2 commits
-#        +3 - Your branch has 3 staged changes to be commited
-#        *1 - Your branch has 1 unstaged changes to be commited
-#        ?6 - Your branch has 6 untracked files
+#       Example: ^2 +3 *1 ?6 |4| means:
+#        ^2  - Your branch is ahead of 'origin/branch' by 2 commits
+#        +3  - Your branch has 3 staged changes to be commited
+#        *1  - Your branch has 1 unstaged changes to be commited
+#        ?6  - Your branch has 6 untracked files
+#        |4| - 4 stashed changes in a dirty working directory away
 #
 # To submit patches:
 #
@@ -115,6 +116,11 @@ __git_ps1_changes ()
 			changes="$changes ?$untracked"
 		fi
 
+		local stash="$(git stash list | wc -l)"
+		if [ $stash -gt 0 ]; then
+			changes="$changes |$stash|"
+		fi
+
 		changes="$(echo "$changes" | xargs)";
 		if [ -n "$changes" ]; then
 			if [ -n "$1" ]; then
@@ -123,6 +129,7 @@ __git_ps1_changes ()
 				printf " %s" "$changes";
 			fi
 		fi
+
 	fi
 }
 
