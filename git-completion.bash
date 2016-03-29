@@ -37,11 +37,12 @@
 #       to PS1 close to __git_ps1:
 #        ...$(__git_ps1 " (%s)")$(__git_ps1_changes " (%s)")...
 #
-#       Example: ▵2 -+3 *1 ?6 means:
-#        ▵2 - Your branch is ahead of 'origin/branch' by 2 commits
-#        +3 - Your branch has 3 staged changes to be commited
-#        *1 - Your branch has 1 unstaged changes to be commited
-#        ?6 - Your branch has 6 untracked files
+#       Example: ^2 +3 *1 ?6 |4| means:
+#        ^2  - Your branch is ahead of 'origin/branch' by 2 commits
+#        +3  - Your branch has 3 staged changes to be commited
+#        *1  - Your branch has 1 unstaged changes to be commited
+#        ?6  - Your branch has 6 untracked files
+#        |4| - 4 stashed changes in a dirty working directory away
 #
 # To submit patches:
 #
@@ -88,40 +89,58 @@ __git_ps1_changes ()
 {
 	local b_ref="$(git symbolic-ref -q HEAD 2>/dev/null)";
 	if [ -n "$b_ref" ]; then
-		local b_origin="$(git for-each-ref --format='%(upstream:short)' $b_ref)";
-		if [ -n "$b_origin" ]; then
-			local b=${b_ref##refs/heads/};
-			local changes="";
-			local unpush=$(git rev-list $b_origin..$b --count);
-			local staged=$(git diff --staged --name-status | wc -l);
-			local uncommits=$(git status -s -uall --porcelain);
+		local b=${b_ref##refs/heads/};
+		local changes="";
 
+		local unmerged_options=(DD AU UD UA DU AA UU);
+		unmerged_cond=$(printf "|%s" "${unmerged_options[@]}");
+		unmerged_cond=${unmerged_cond:1};
+
+		local b_orgn="$(git for-each-ref --format='%(upstream:short)' $b_ref)";
+		if [ -n "$b_orgn" ]; then
+			local unpush=$(git rev-list $b_orgn..$b --count);
 			if (( $unpush > 0 )); then
 				changes="$changes ^$unpush"
 			fi
-			if (( $staged > 0 )); then
-				changes="$changes +$staged"
-			fi
+		fi
 
-			local unstaged=$(echo "$uncommits" | grep -c "^ [A-Z]");
-			if (( $unstaged > 0 )); then
-				changes="$changes *$unstaged"
-			fi
+		local commits=`git status -suall --porcelain 2>/dev/null`;
+		local not_unmerged=$(echo -e "$commits" | grep -v "${unmerged_cond}");
 
-			local untracked=$(echo "$uncommits" | grep -c "^??");
-			if (( $untracked > 0 )); then
-				changes="$changes ?$untracked"
-			fi
+		local staged=$(echo -e "$not_unmerged" | grep -c "^[MADRC].");
+		if (( $staged > 0 )); then
+			changes="$changes +$staged"
+		fi
 
-			changes="$(echo "$changes" | xargs)";
-			if [ -n "$changes" ]; then
-				if [ -n "$1" ]; then
-					printf "$1" "$changes";
-				else
-					printf " %s" "$changes";
-				fi
+		local unstaged=$(echo -e "$not_unmerged" | grep -c "^.[MD]");
+		if (( $unstaged > 0 )); then
+			changes="$changes *$unstaged"
+		fi
+
+		local untracked=$(echo -e "$not_unmerged" | grep -c "^??");
+		if (( $untracked > 0 )); then
+			changes="$changes ?$untracked"
+		fi
+
+		local unmerged=$(echo -e "$commits" | grep -cE "${unmerged_cond}");
+		if (( $unmerged > 0 )); then
+			changes="$changes !$unmerged"
+		fi
+
+		local stash="$(git stash list 2>/dev/null | wc -l)"
+		if [ $stash -gt 0 ]; then
+			changes="$changes |$stash|"
+		fi
+
+		changes="$(echo "$changes" | xargs)";
+		if [ -n "$changes" ]; then
+			if [ -n "$1" ]; then
+				printf "$1" "$changes";
+			else
+				printf " %s" "$changes";
 			fi
 		fi
+
 	fi
 }
 
