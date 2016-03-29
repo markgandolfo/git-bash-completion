@@ -92,6 +92,10 @@ __git_ps1_changes ()
 		local b=${b_ref##refs/heads/};
 		local changes="";
 
+		local unmerged_options=(DD AU UD UA DU AA UU);
+		unmerged_cond=$(printf "|%s" "${unmerged_options[@]}");
+		unmerged_cond=${unmerged_cond:1};
+
 		local b_orgn="$(git for-each-ref --format='%(upstream:short)' $b_ref)";
 		if [ -n "$b_orgn" ]; then
 			local unpush=$(git rev-list $b_orgn..$b --count);
@@ -100,20 +104,27 @@ __git_ps1_changes ()
 			fi
 		fi
 
-		local staged=$(git diff --staged --name-status | wc -l);
+		local commits=`git status -suall --porcelain 2>/dev/null`;
+		local not_unmerged=$(echo -e "$commits" | grep -v "${unmerged_cond}");
+
+		local staged=$(echo -e "$not_unmerged" | grep -c "^[MADRC].");
 		if (( $staged > 0 )); then
 			changes="$changes +$staged"
 		fi
 
-		local uncommits=$(git status -s -uall --porcelain 2>/dev/null);
-		local unstaged=$(echo "$uncommits" | grep -c "^[^\b][A-Z]");
+		local unstaged=$(echo -e "$not_unmerged" | grep -c "^.[MD]");
 		if (( $unstaged > 0 )); then
 			changes="$changes *$unstaged"
 		fi
 
-		local untracked=$(echo "$uncommits" | grep -c "^??");
+		local untracked=$(echo -e "$not_unmerged" | grep -c "^??");
 		if (( $untracked > 0 )); then
 			changes="$changes ?$untracked"
+		fi
+
+		local unmerged=$(echo -e "$commits" | grep -cE "${unmerged_cond}");
+		if (( $unmerged > 0 )); then
+			changes="$changes !$unmerged"
 		fi
 
 		local stash="$(git stash list 2>/dev/null | wc -l)"
