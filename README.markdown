@@ -9,7 +9,7 @@ That should run automatically.. if not, in your .bashrc file add the following l
 ## To install on MacOSX
 You'll need to create the bash completion directory first.
 
-`mkdir /opt/local/etc/bash_completion/`<br />
+`mkdir -p /opt/local/etc/bash_completion/`<br />
 `cp git-completion.bash /opt/local/etc/bash_completion/`
 
 ## The coolness
